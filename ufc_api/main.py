@@ -1,17 +1,38 @@
-from fastapi import FastAPI, HTTPException, Depends, Header, Query
+from fastapi import FastAPI, HTTPException, Depends, Header, Query, Request
 from dotenv import load_dotenv
 from pathlib import Path
 import os
 import pandas as pd
 import json
 from typing import Optional
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+import logging
 
 # Load environment variables
 load_dotenv()
 
-# API key check supporting both header and query param
-# Explicitly disable underscore conversion for browser compatibility
+# Set up logging
+log_dir = Path(__file__).resolve().parent.parent / "logs"
+log_dir.mkdir(exist_ok=True)
+logging.basicConfig(
+    filename=log_dir / "api.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI(
+    title="UFC Fighter Stats API 💪",
+    description="Programmatic access to UFC fighter stats from a local dataset.",
+    version="1.0.0"
+)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# API key verification (header or query param)
 def verify_api_key(
     x_api_key: Optional[str] = Header(default=None, convert_underscores=False),
     api_key: Optional[str] = Query(default=None)
@@ -20,55 +41,53 @@ def verify_api_key(
     if key != os.getenv("UFC_API_KEY"):
         raise HTTPException(status_code=401, detail="Invalid API Key")
 
-app = FastAPI(
-    title="UFC Fighter Stats API 💪",
-    description="Programmatic access to UFC fighter stats from a local dataset.",
-    version="1.0.0"
-)
-
-# CSV path (assumes project root is ufc_stats_api/)
+# Load CSV
 csv_path = Path(__file__).resolve().parent.parent / "data" / "ufc_fighters_stats.csv"
-
-# Load data
 try:
-    df = pd.read_csv(csv_path)
-    df = df.fillna("")  # Replace NaN with empty string
-except FileNotFoundError:
-    raise RuntimeError(f"CSV file not found at: {csv_path}")
+    df = pd.read_csv(csv_path).fillna("")
 except Exception as e:
-    raise RuntimeError(f"Error reading CSV file: {e}")
+    raise RuntimeError(f"CSV load error: {e}")
+
+# Logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logging.info(f"{request.method} {request.url}")
+    response = await call_next(request)
+    logging.info(f"Completed with status {response.status_code}")
+    return response
 
 @app.get("/", summary="Root Welcome Message")
+@limiter.limit("10/minute")
 def root():
     return {"message": "Welcome to the UFC Fighter Stats API 💪"}
 
-@app.get("/fighters", summary="List all fighters", description="Returns a list of all fighters with their stats.")
+@app.get("/fighters", summary="List all fighters")
+@limiter.limit("5/minute")
 def get_fighters(api_key: str = Depends(verify_api_key)):
-    try:
-        return json.loads(df.to_json(orient="records"))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return json.loads(df.to_json(orient="records"))
 
-@app.get("/fighters/{name}", summary="Get a fighter by name", description="Returns detailed stats for a specific fighter by name.")
+@app.get("/fighters/{name}", summary="Get a fighter by name")
+@limiter.limit("5/minute")
 def get_fighter_by_name(name: str, api_key: str = Depends(verify_api_key)):
     result = df[df['fighter_name'].str.lower() == name.lower()]
     if result.empty:
         raise HTTPException(status_code=404, detail="Fighter not found")
     return json.loads(result.to_json(orient="records"))[0]
 
-@app.get("/summary/striking", summary="Striking summary", description="Get average striking stats across all fighters.")
+@app.get("/summary/striking", summary="Striking summary")
+@limiter.limit("3/minute")
 def get_striking_summary(api_key: str = Depends(verify_api_key)):
     stats = df[['strikes_landed_per_min', 'strike_accuracy_pct', 'strikes_absorbed_per_min', 'strike_defense_pct']]
-    summary = stats.astype(float).mean().to_dict()
-    return {"average_striking_stats": summary}
+    return {"average_striking_stats": stats.astype(float).mean().to_dict()}
 
-@app.get("/summary/grappling", summary="Grappling summary", description="Get average grappling stats across all fighters.")
+@app.get("/summary/grappling", summary="Grappling summary")
+@limiter.limit("3/minute")
 def get_grappling_summary(api_key: str = Depends(verify_api_key)):
     stats = df[['takedowns_per_15min', 'takedown_accuracy_pct', 'takedown_defense_pct', 'submission_attempts_per_15min']]
-    summary = stats.astype(float).mean().to_dict()
-    return {"average_grappling_stats": summary}
+    return {"average_grappling_stats": stats.astype(float).mean().to_dict()}
 
-@app.get("/search", summary="Search fighters", description="Search fighters by partial name match.")
+@app.get("/search", summary="Search fighters")
+@limiter.limit("5/minute")
 def search_fighters(query: str, api_key: str = Depends(verify_api_key)):
     result = df[df['fighter_name'].str.contains(query, case=False)]
     if result.empty:
