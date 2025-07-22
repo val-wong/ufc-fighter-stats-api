@@ -97,11 +97,10 @@ def search_fighters(query: str, api_key: str = Depends(verify_api_key)):
 @app.get("/stats/summary", summary="Get summary statistics")
 @limiter.limit("5/minute")
 def get_stats_summary(api_key: str = Depends(verify_api_key)):
-    return {
+    summary = {
         "total_fighters": len(df),
-        "average_height_cm": round(df["height_cm"].mean(), 2),
-        "average_weight_kg": round(df["weight_kg"].mean(), 2),
-        "average_reach_cm": round(df["reach_cm"].mean(), 2),
-        "average_age": round(df["age"].mean(), 2),
+        "average_height": df["Height_cms"].mean(),
+        "average_weight": df["Weight_lbs"].mean(),
+        "average_reach": df["Reach_in"].mean()
     }
-
+    return summary
