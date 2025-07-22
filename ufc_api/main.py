@@ -1,17 +1,21 @@
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, Query
 from dotenv import load_dotenv
 from pathlib import Path
 import os
 import pandas as pd
 import json
-from typing import Optional, List
+from typing import Optional
 
 # Load environment variables
 load_dotenv()
 
-# Simple API key check
-def verify_api_key(x_api_key: str = Header(...)):
-    if x_api_key != os.getenv("UFC_API_KEY"):
+# API key check supporting both header and query param
+def verify_api_key(
+    x_api_key: Optional[str] = Header(None),
+    api_key: Optional[str] = Query(None)
+):
+    key = x_api_key or api_key
+    if key != os.getenv("UFC_API_KEY"):
         raise HTTPException(status_code=401, detail="Invalid API Key")
 
 app = FastAPI(
