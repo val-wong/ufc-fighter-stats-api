@@ -26,7 +26,7 @@ jobs:
           pip install flake8
 
       - name: Lint with flake8
-        run: flake8 ufc_api
+        run: flake8 --config=setup.cfg
 
       - name: Deploy to Render
         env:
