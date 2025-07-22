@@ -1,3 +1,4 @@
+from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI, HTTPException, Depends, Header, Query, Request
 from dotenv import load_dotenv
 from pathlib import Path
@@ -108,3 +109,23 @@ def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):
     except Exception as e:
         logging.exception("Error generating summary stats")
         raise HTTPException(status_code=500, detail=f"Error generating summary: {e}")
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="UFC Fighter Stats API 💪",
+        version="1.0.0",
+        description="""
+## 👋 Welcome to the UFC Fighter Stats API
+
+This API provides programmatic access to stats about UFC fighters from a local dataset.
+
+---
+
+## 🔐 Authentication
+
+All endpoints (except `/`) require an API key to access.
+
+### ✅ Option 1: Header
+
