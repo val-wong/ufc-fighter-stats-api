@@ -58,7 +58,7 @@ async def log_requests(request: Request, call_next):
 
 @app.get("/", summary="Root Welcome Message")
 @limiter.limit("10/minute")
-def root(request: Request):  # ✅ required for limiter
+def root(request: Request):  # <- this is REQUIRED
     return {"message": "Welcome to the UFC Fighter Stats API 💪"}
 
 @app.get("/fighters", summary="List all fighters")
