@@ -10,10 +10,10 @@ from typing import Optional
 load_dotenv()
 
 # API key check supporting both header and query param
-# Removed convert_underscores=False to allow x-api-key to work in browsers
+# Explicitly disable underscore conversion for browser compatibility
 
 def verify_api_key(
-    x_api_key: Optional[str] = Header(default=None),
+    x_api_key: Optional[str] = Header(default=None, convert_underscores=False),
     api_key: Optional[str] = Query(default=None)
 ):
     key = x_api_key or api_key
