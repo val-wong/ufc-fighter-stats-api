@@ -2,4 +2,4 @@ fastapi
 uvicorn
 pandas
 python-dotenv
-slowapi==0.1.6
+slowapi==0.1.8
