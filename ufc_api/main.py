@@ -93,3 +93,15 @@ def search_fighters(query: str, api_key: str = Depends(verify_api_key)):
     if result.empty:
         raise HTTPException(status_code=404, detail="No fighters matched your search")
     return json.loads(result.to_json(orient="records"))
+
+@app.get("/stats/summary", summary="Get summary statistics")
+@limiter.limit("5/minute")
+def get_stats_summary(api_key: str = Depends(verify_api_key)):
+    return {
+        "total_fighters": len(df),
+        "average_height_cm": round(df["height_cm"].mean(), 2),
+        "average_weight_kg": round(df["weight_kg"].mean(), 2),
+        "average_reach_cm": round(df["reach_cm"].mean(), 2),
+        "average_age": round(df["age"].mean(), 2),
+    }
+
