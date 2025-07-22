@@ -11,7 +11,7 @@ load_dotenv()
 
 # API key check supporting both header and query param
 def verify_api_key(
-    x_api_key: Optional[str] = Header(None),
+    x_api_key: Optional[str] = Header(None, alias="x-api-key"),
     api_key: Optional[str] = Query(None)
 ):
     key = x_api_key or api_key
