@@ -11,12 +11,13 @@ load_dotenv()
 
 # API key check supporting both header and query param
 def verify_api_key(
-    x_api_key: Optional[str] = Header(None, alias="x-api-key"),
-    api_key: Optional[str] = Query(None)
+    x_api_key: Optional[str] = Header(default=None),  # Allow underscores to convert to hyphens
+    api_key: Optional[str] = Query(default=None)
 ):
     key = x_api_key or api_key
     if key != os.getenv("UFC_API_KEY"):
         raise HTTPException(status_code=401, detail="Invalid API Key")
+
 
 app = FastAPI(
     title="UFC Fighter Stats API 💪",
