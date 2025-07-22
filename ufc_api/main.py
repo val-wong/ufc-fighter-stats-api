@@ -94,8 +94,8 @@ def search_fighters(request: Request, query: str, api_key: str = Depends(verify_
         raise HTTPException(status_code=404, detail="No fighters matched your search")
     return json.loads(result.to_json(orient="records"))
 
-@app.get("/stats/summary", summary="Get summary statistics")
 @limiter.limit("5/minute")
+@app.get("/stats/summary", summary="Get summary statistics")
 def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):
     try:
         summary = {
