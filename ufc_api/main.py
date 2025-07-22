@@ -10,14 +10,15 @@ from typing import Optional
 load_dotenv()
 
 # API key check supporting both header and query param
+# Removed convert_underscores=False to allow x-api-key to work in browsers
+
 def verify_api_key(
-    x_api_key: Optional[str] = Header(default=None),  # Allow underscores to convert to hyphens
+    x_api_key: Optional[str] = Header(default=None),
     api_key: Optional[str] = Query(default=None)
 ):
     key = x_api_key or api_key
     if key != os.getenv("UFC_API_KEY"):
         raise HTTPException(status_code=401, detail="Invalid API Key")
-
 
 app = FastAPI(
     title="UFC Fighter Stats API 💪",
