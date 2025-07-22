@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: ufc-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn ufc_api.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: UFC_API_KEY
+        value: valW0rldCh4mp
+    plan: free
+    autoDeploy: true
