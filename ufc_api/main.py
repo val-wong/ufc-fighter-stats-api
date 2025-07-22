@@ -96,11 +96,16 @@ def search_fighters(request: Request, query: str, api_key: str = Depends(verify_
 
 @app.get("/stats/summary", summary="Get summary statistics")
 @limiter.limit("5/minute")
-def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):  # ✅
-    summary = {
-        "total_fighters": len(df),
-        "average_height": df["Height_cms"].mean(),
-        "average_weight": df["Weight_lbs"].mean(),
-        "average_reach": df["Reach_in"].mean()
-    }
-    return summary
+def get_stats_summary(api_key: str = Depends(verify_api_key)):
+    try:
+        summary = {
+            "total_fighters": len(df),
+            "average_height": pd.to_numeric(df["Height_cms"], errors="coerce").mean(skipna=True),
+            "average_weight": pd.to_numeric(df["Weight_lbs"], errors="coerce").mean(skipna=True),
+            "average_reach": pd.to_numeric(df["Reach_in"], errors="coerce").mean(skipna=True)
+        }
+        return summary
+    except Exception as e:
+        logging.exception("Error generating summary stats")
+        raise HTTPException(status_code=500, detail=f"Error generating summary: {e}")
+
