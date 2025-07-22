@@ -1,3 +1,4 @@
 [flake8]
 ignore = E501,E302,E305,F401
 exclude = .venv,venv,__pycache__,build,dist
+max-line-length = 120
