@@ -100,7 +100,7 @@ def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):
     try:
         summary = {
             "total_fighters": len(df),
-            "average_height": pd.to_numeric(df["Height_cms"], errors="coerce").mean(skipna=True),
+            "average_height": pd.to_numeric(df["height_cm"], errors="coerce").mean(skipna=True),
             "average_weight": pd.to_numeric(df["Weight_lbs"], errors="coerce").mean(skipna=True),
             "average_reach": pd.to_numeric(df["Reach_in"], errors="coerce").mean(skipna=True)
         }
