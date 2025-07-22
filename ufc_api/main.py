@@ -95,7 +95,7 @@ def search_fighters(request: Request, query: str, api_key: str = Depends(verify_
     return json.loads(result.to_json(orient="records"))
 
 @limiter.limit("5/minute")
-@app.get("/stats/summary", summary="Get summary statistics")
+@app.get("/stats/summary", summary="Get summary statistics across different categories")
 def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):
     try:
         summary = {
