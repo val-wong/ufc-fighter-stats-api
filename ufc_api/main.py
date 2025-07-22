@@ -1,3 +1,4 @@
+from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI, HTTPException, Depends, Header, Query, Request
 from dotenv import load_dotenv
 from pathlib import Path
@@ -107,4 +108,3 @@ def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):
         return summary
     except Exception as e:
         logging.exception("Error generating summary stats")
-        raise HTTPException(status_code=500, detail=f"Error generating summary: {e}")
