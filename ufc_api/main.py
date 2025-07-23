@@ -1,3 +1,4 @@
+from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI, HTTPException, Depends, Header, Query, Request
 from dotenv import load_dotenv
 from pathlib import Path
@@ -105,6 +106,3 @@ def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):
             "average_reach": pd.to_numeric(df["reach_cm"], errors="coerce").mean(skipna=True)
         }
         return summary
-    except Exception:
-        logging.exception("Failed to generate stats summary")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
