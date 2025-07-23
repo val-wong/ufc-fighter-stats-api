@@ -106,5 +106,3 @@ def get_stats_summary(request: Request, api_key: str = Depends(verify_api_key)):
             "average_reach": pd.to_numeric(df["reach_cm"], errors="coerce").mean(skipna=True)
         }
         return summary
-    except Exception as e:
-        logging.exception("Error generating summary stats")
